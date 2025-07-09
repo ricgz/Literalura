@@ -38,8 +38,8 @@ public class Autor {
 
     @Override
     public String toString() {
-        return "Nombre='" + nombre + '\'' +
-                ", nacimiento=" + nacimiento +
-                ", fallecimiento=" + fallecimiento;
+        return "\n\tNombre='" + nombre + '\'' +
+                ", Nacimiento=" + nacimiento +
+                ", Fallecimiento=" + fallecimiento;
     }
 }

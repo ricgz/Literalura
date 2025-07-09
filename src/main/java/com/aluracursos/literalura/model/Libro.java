@@ -8,7 +8,7 @@ public class Libro {
     private String titulo;
     private List<Autor> autores;
     private String sinopsis;
-    private String idiomas;
+    private String idioma;
     private String tipo;
     private Integer descargas;
 
@@ -17,7 +17,7 @@ public class Libro {
         this.titulo = l.titulo();
         this.autores = this.obtenerAutores(l.autores());
         this.sinopsis = l.sinopsis();
-        this.idiomas = l.idiomas();
+        this.idioma = l.idioma();
         this.tipo = l.tipo();
         this.descargas = l.descargas();
 
@@ -62,12 +62,12 @@ public class Libro {
         this.sinopsis = sinopsis;
     }
 
-    public String getIdiomas() {
-        return idiomas;
+    public String getIdioma() {
+        return idioma;
     }
 
-    public void setIdiomas(String idiomas) {
-        this.idiomas = idiomas;
+    public void setIdioma(String idiomas) {
+        this.idioma = idiomas;
     }
 
     public Integer getDescargas() {
@@ -84,7 +84,7 @@ public class Libro {
                 "\tid_api=" + id_api + '\n' +
                 "\tautores=" + autores + '\n' +
                 "\tsinopsis=" + sinopsis  + '\n' +
-                "\tidiomas=" + idiomas + '\n' +
+                "\tidioma=" + idioma + '\n' +
                 "\ttipo=" + tipo + '\n' +
                 "\tdescargas=" + descargas + '\n';
     }
