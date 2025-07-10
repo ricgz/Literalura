@@ -13,10 +13,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Principal {
     private Scanner teclado = new Scanner(System.in);
@@ -24,7 +21,7 @@ public class Principal {
     private final String URL_BASE = "https://gutendex.com/books/";
     private ConvierteDatos conversor = new ConvierteDatos();
     private ObjectMapper objectMapper = new ObjectMapper();
-    private List<Libro> librosEncontrados;
+    private List<Libro> librosBuscados = new ArrayList<>();
 
     public Principal() {
 
@@ -33,8 +30,9 @@ public class Principal {
     public void muestraElMenu() {
         System.out.println("\n=============== Bienvenido a LiterAlura ===============\n");
         var opcion = -1;
-        while (opcion != 0) {
-            var menu = """
+
+            while (opcion != 0) {
+                var menu = """
                     1 - Buscar libro por titulo (buscar en API y registrar en BD)
                     2 - Listar libros registrados (buscar en BD)
                     3 - Listar autores registrados (buscar en BD)
@@ -43,37 +41,44 @@ public class Principal {
                                   
                     0 - Salir
                     """;
-            System.out.println(menu);
-            opcion = teclado.nextInt();
-            teclado.nextLine();
+                System.out.println(menu);
+                try{
+                    opcion = teclado.nextInt();
+                    teclado.nextLine();
 
-            switch (opcion) {
-                case 1:
-                    buscarLibrosApi();
-                    break;
-                case 2:
-                    mostrarLibrosRegistrados();
-                    break;
-                case 3:
-                    mostrarAutoresRegistrados();
-                    break;
-                case 4:
-                    autoresVivosPorAnio();
-                    break;
-                case 5:
-                    mostrarLibrosPorIdioma();
-                    break;
-                case 0:
-                    System.out.println("Cerrando la aplicación...");
-                    break;
-                default:
-                    System.out.println("Opción inválida");
+                    switch (opcion) {
+                        case 1:
+                            buscarLibrosApi();
+                            break;
+                        case 2:
+                            mostrarLibrosRegistrados();
+                            break;
+                        case 3:
+                            mostrarAutoresRegistrados();
+                            break;
+                        case 4:
+                            autoresVivosPorAnio();
+                            break;
+                        case 5:
+                            mostrarLibrosPorIdioma();
+                            break;
+                        case 0:
+                            System.out.println("Cerrando la aplicación...");
+                            break;
+                        default:
+                            System.out.println("Opción fuera de rango! reintente...");
+                    }
+                }catch (InputMismatchException e){
+                    System.out.println("Opcion invalida! reintente...");
+                    teclado.nextLine(); // limpiamos el buffer de teclado.
+                    opcion = -1;
+                }
             }
-        }
 
     }
 
     private void buscarLibrosApi() {
+
         System.out.println("Escribe el nombre del libro que deseas buscar");
         var libroBuscar = teclado.nextLine();
         String json = null;
@@ -85,21 +90,27 @@ public class Principal {
 
         // Procesamos la respuesta Json y la formateamos como un Record Datoslibro
         // ademas filtramos solos los que cominecen con el texto indicado
-        librosEncontrados = this.procesaJsonLibros(json).stream()
-                .filter(l -> l.titulo().toLowerCase().startsWith(libroBuscar.toLowerCase()))
-                .sorted(Comparator.comparing(DatosLibro::descargas).reversed())
-                .limit(1)
+        Optional <Libro> libroEncontrado = this.procesaJsonLibros(json).stream()
+                .filter(l -> l.titulo().toLowerCase().contains(libroBuscar.toLowerCase()))
+                //.sorted(Comparator.comparing(DatosLibro::descargas).reversed())
                 .map(l-> new Libro(l))
-                .toList();
+                .findFirst();
 
-        librosEncontrados.forEach(System.out::println);
+        if(libroEncontrado.isPresent()){
+            var libro = libroEncontrado.get();
+            librosBuscados.add(libro);
+            System.out.println(libro);
+        }
 
     }
 
     private void mostrarLibrosRegistrados() {
+        System.out.println("Hay " + librosBuscados.size() + " libros registrados.");
+        librosBuscados.forEach(System.out::println);
     }
 
     private void mostrarAutoresRegistrados() {
+
     }
 
     private void autoresVivosPorAnio() {
@@ -112,6 +123,7 @@ public class Principal {
     // metodo para probar la conversion de datos
     public void testApi() {
         String busqueda = "pride";
+        List<Libro> librosEncontrados;
 
         var json = consumoApi.obtenerDatos(URL_BASE + "?search=" + busqueda);
 
@@ -133,10 +145,10 @@ public class Principal {
             JsonNode rootNode = objectMapper.readTree(json);
             var cantidadDeResultados = rootNode.get("count").asInt();
 
+            // ... si encontramos al menos 1 libro, continuamos...
             if(cantidadDeResultados > 0){
                 ArrayNode librosNode = (ArrayNode) rootNode.get("results");
-                System.out.println("resultados: " + librosNode);
-
+                //System.out.println(librosNode);
                 for (JsonNode libroNode : librosNode ){
                     // filtramos solo los tipo texto
                     if(libroNode.get("media_type").asText().equals("Text")){
@@ -157,10 +169,8 @@ public class Principal {
                                 libroNode.get("media_type").asText(),
                                 libroNode.get("download_count").asInt()
                         );
-
                         librosEncontrados.add(libro);
                     }
-
                 }
 
                 return librosEncontrados;

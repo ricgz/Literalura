@@ -78,14 +78,29 @@ public class Libro {
         this.descargas = descargas;
     }
 
+    private String getAutoresString(){
+        String autores = "";
+        for (Autor autor : getAutores()){
+            autores += "\n" +
+                    "\t\t" + autor.getNombre() +
+                    " - Nac: " + autor.getNacimiento() +
+                    " - Fallecimiento: " +  autor.getFallecimiento() +
+                    "\n";
+        }
+        return autores;
+    }
+
     @Override
     public String toString() {
-        return titulo + '\n' +
-                "\tid_api=" + id_api + '\n' +
-                "\tautores=" + autores + '\n' +
-                "\tsinopsis=" + sinopsis  + '\n' +
-                "\tidioma=" + idioma + '\n' +
-                "\ttipo=" + tipo + '\n' +
-                "\tdescargas=" + descargas + '\n';
+        String info =
+                "\n==========================================" +
+                "\nLibro: " + titulo + '\n' +
+                "\tSinopsis: " + sinopsis  + '\n' +
+                "\tidioma: " + idioma + '\n' +
+                "\tAutores: " + getAutoresString()  +
+                "\tTipo: " + tipo + '\n' +
+                "\tDescargas: " + descargas + '\n';
+
+        return info;
     }
 }
