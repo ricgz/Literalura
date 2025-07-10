@@ -143,6 +143,18 @@ public class Principal {
     }
 
     private void mostrarLibrosPorIdioma() {
+        if(!librosBuscados.isEmpty()){
+            System.out.println("Ingrese el idiaoma de los libros que desea buscar (es: español, en: ingles, fr: frances)");
+            var idiomaBuscado = teclado.nextLine();
+
+                System.out.println(" ======= Libros en idioma " + idiomaBuscado + " =======");
+                librosBuscados.stream()
+                        .filter(a -> a.getIdioma().equalsIgnoreCase(idiomaBuscado))
+                        .forEach(System.out::println);
+
+        }else{
+            System.out.println("Aun no nada por aca!!! realice una busqueda primero..");
+        }
     }
 
 
