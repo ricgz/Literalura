@@ -1,7 +1,5 @@
 package com.aluracursos.literalura.principal;
 
-import ch.qos.logback.core.encoder.JsonEscapeUtil;
-import com.aluracursos.literalura.model.Autor;
 import com.aluracursos.literalura.model.DatosAutor;
 import com.aluracursos.literalura.model.DatosLibro;
 import com.aluracursos.literalura.model.Libro;
@@ -14,7 +12,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class Principal {
@@ -113,15 +110,36 @@ public class Principal {
     }
 
     private void mostrarAutoresRegistrados() {
-        System.out.println(" ======= Autores registrados =======");
-        librosBuscados.stream()
-                .forEach(l->l.getAutores().stream()
-                        .forEach(System.out::println)
-                );
+        if(!librosBuscados.isEmpty()){
+            System.out.println(" ======= Autores registrados =======");
+            librosBuscados.stream()
+                    .forEach(l->l.getAutores().stream()
+                            .forEach(System.out::println)
+                    );
+        }else{
+            System.out.println("Aun no nada por aca!!! realice una busqueda primero..");
+        }
+
     }
 
     private void autoresVivosPorAnio() {
 
+        if(!librosBuscados.isEmpty()){
+            System.out.println("Ingrese el año desde el cual desea consultar autores vivos:");
+            var anio = teclado.nextLine();
+            try{
+                var anioConsulta = Integer.valueOf(anio);
+                System.out.println(" ======= Autores vivos desde el año " + anioConsulta + " =======");
+                librosBuscados.stream()
+                        .forEach(l-> l.getAutores().stream()
+                                .filter(a -> a.getNacimiento() >= anioConsulta)
+                                .forEach(System.out::println));
+            }catch (NumberFormatException e){
+                System.out.println("El formato del año no es correcto! reintente...");
+            }
+        }else{
+            System.out.println("Aun no nada por aca!!! realice una busqueda primero..");
+        }
     }
 
     private void mostrarLibrosPorIdioma() {

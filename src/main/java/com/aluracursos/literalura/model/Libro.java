@@ -82,7 +82,7 @@ public class Libro {
         String autores = "";
         for (Autor autor : getAutores()){
             autores += "\n" +
-                    "\t\t" + autor.getNombre() +
+                    "\t\t*" + autor.getNombre() +
                     " - Nac: " + autor.getNacimiento() +
                     " - Fallecimiento: " +  autor.getFallecimiento() +
                     "\n";
@@ -92,7 +92,7 @@ public class Libro {
 
     @Override
     public String toString() {
-        String info =
+        return
                 "\n==========================================" +
                 "\nLibro: " + titulo + '\n' +
                 "\tSinopsis: " + sinopsis  + '\n' +
@@ -101,6 +101,5 @@ public class Libro {
                 "\tTipo: " + tipo + '\n' +
                 "\tDescargas: " + descargas + '\n';
 
-        return info;
     }
 }
