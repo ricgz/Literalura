@@ -1,5 +1,7 @@
 package com.aluracursos.literalura.principal;
 
+import ch.qos.logback.core.encoder.JsonEscapeUtil;
+import com.aluracursos.literalura.model.Autor;
 import com.aluracursos.literalura.model.DatosAutor;
 import com.aluracursos.literalura.model.DatosLibro;
 import com.aluracursos.literalura.model.Libro;
@@ -28,11 +30,12 @@ public class Principal {
     }
 
     public void muestraElMenu() {
-        System.out.println("\n=============== Bienvenido a LiterAlura ===============\n");
+        System.out.println("\n=============== Bienvenido a LiterAlura ===============");
         var opcion = -1;
 
             while (opcion != 0) {
                 var menu = """
+                        \n
                     1 - Buscar libro por titulo (buscar en API y registrar en BD)
                     2 - Listar libros registrados (buscar en BD)
                     3 - Listar autores registrados (buscar en BD)
@@ -105,15 +108,20 @@ public class Principal {
     }
 
     private void mostrarLibrosRegistrados() {
-        System.out.println("Hay " + librosBuscados.size() + " libros registrados.");
+        System.out.println(" ======= Hay " + librosBuscados.size() + " libros registrados =======");
         librosBuscados.forEach(System.out::println);
     }
 
     private void mostrarAutoresRegistrados() {
-
+        System.out.println(" ======= Autores registrados =======");
+        librosBuscados.stream()
+                .forEach(l->l.getAutores().stream()
+                        .forEach(System.out::println)
+                );
     }
 
     private void autoresVivosPorAnio() {
+
     }
 
     private void mostrarLibrosPorIdioma() {
