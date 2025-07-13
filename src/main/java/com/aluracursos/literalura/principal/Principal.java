@@ -78,7 +78,6 @@ public class Principal {
     }
 
     private void buscarLibrosApi() {
-
         System.out.println("Escribe el nombre del libro que deseas buscar");
         var libroBuscar = teclado.nextLine();
         String json = null;
@@ -112,10 +111,7 @@ public class Principal {
     private void mostrarAutoresRegistrados() {
         if(!librosBuscados.isEmpty()){
             System.out.println(" ======= Autores registrados =======");
-            librosBuscados.stream()
-                    .forEach(l->l.getAutores().stream()
-                            .forEach(System.out::println)
-                    );
+            librosBuscados.forEach(l -> System.out.println(l.getAutor()));
         }else{
             System.out.println("Aun no nada por aca!!! realice una busqueda primero..");
         }
@@ -131,9 +127,8 @@ public class Principal {
                 var anioConsulta = Integer.valueOf(anio);
                 System.out.println(" ======= Autores vivos desde el año " + anioConsulta + " =======");
                 librosBuscados.stream()
-                        .forEach(l-> l.getAutores().stream()
-                                .filter(a -> a.getNacimiento() >= anioConsulta)
-                                .forEach(System.out::println));
+                        .filter(l-> l.getAutor().getNacimiento() >= anioConsulta)
+                        .forEach(System.out::println);
             }catch (NumberFormatException e){
                 System.out.println("El formato del año no es correcto! reintente...");
             }
@@ -192,16 +187,10 @@ public class Principal {
                     if(libroNode.get("media_type").asText().equals("Text")){
                         ArrayNode autoresNode = (ArrayNode) libroNode.get("authors");
 
-                        List<DatosAutor> autores = new ArrayList<>();
-
-                        for (JsonNode autorNode : autoresNode) {
-                            autores.add(conversor.obtenerDatos(autorNode.toString(), DatosAutor.class));
-                        }
-
                         DatosLibro libro = new DatosLibro(
                                 libroNode.get("id").asInt(),
                                 libroNode.get("title").asText(),
-                                autores,
+                                conversor.obtenerDatos(autoresNode.get(0).toString(), DatosAutor.class),
                                 libroNode.get("summaries").get(0).asText(),
                                 libroNode.get("languages").get(0).asText(),
                                 libroNode.get("media_type").asText(),
@@ -210,7 +199,6 @@ public class Principal {
                         librosEncontrados.add(libro);
                     }
                 }
-
                 return librosEncontrados;
 
             }else{

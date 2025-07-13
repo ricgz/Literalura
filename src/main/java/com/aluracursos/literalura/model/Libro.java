@@ -1,12 +1,16 @@
 package com.aluracursos.literalura.model;
+import jakarta.persistence.*;
 
-import java.util.List;
-
+@Entity
+@Table (name = "libro")
 public class Libro {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Integer id_api;
     private String titulo;
-    private List<Autor> autores;
+    @ManyToOne
+    private Autor autor;
     private String sinopsis;
     private String idioma;
     private String tipo;
@@ -15,19 +19,11 @@ public class Libro {
     public Libro(DatosLibro l) {
         this.id_api = l.id();
         this.titulo = l.titulo();
-        this.autores = this.obtenerAutores(l.autores());
+        this.autor = new Autor(l.autor());
         this.sinopsis = l.sinopsis();
         this.idioma = l.idioma();
         this.tipo = l.tipo();
         this.descargas = l.descargas();
-
-
-    }
-
-    private List<Autor> obtenerAutores(List<DatosAutor> autores){
-        return autores.stream()
-                .map(a -> new Autor(a))
-                .toList();
     }
 
     public Integer getId_api() {
@@ -46,12 +42,12 @@ public class Libro {
         this.titulo = titulo;
     }
 
-    public List<Autor> getAutores() {
-        return autores;
+    public Autor getAutor() {
+        return autor;
     }
 
-    public void setAutores(List<Autor> autores) {
-        this.autores = autores;
+    public void setAutor(Autor autor) {
+        this.autor = autor;
     }
 
     public String getSinopsis() {
@@ -78,18 +74,6 @@ public class Libro {
         this.descargas = descargas;
     }
 
-    private String getAutoresString(){
-        String autores = "";
-        for (Autor autor : getAutores()){
-            autores += "\n" +
-                    "\t\t*" + autor.getNombre() +
-                    " - Nac: " + autor.getNacimiento() +
-                    " - Fallecimiento: " +  autor.getFallecimiento() +
-                    "\n";
-        }
-        return autores;
-    }
-
     @Override
     public String toString() {
         return
@@ -97,9 +81,8 @@ public class Libro {
                 "\nLibro: " + titulo + '\n' +
                 "\tSinopsis: " + sinopsis  + '\n' +
                 "\tidioma: " + idioma + '\n' +
-                "\tAutores: " + getAutoresString()  +
+                "\tAutor: " + autor.toString()  +
                 "\tTipo: " + tipo + '\n' +
                 "\tDescargas: " + descargas + '\n';
-
     }
 }
