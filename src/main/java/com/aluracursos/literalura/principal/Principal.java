@@ -1,8 +1,11 @@
 package com.aluracursos.literalura.principal;
 
+import com.aluracursos.literalura.model.Autor;
 import com.aluracursos.literalura.model.DatosAutor;
 import com.aluracursos.literalura.model.DatosLibro;
 import com.aluracursos.literalura.model.Libro;
+import com.aluracursos.literalura.repository.AutorRepository;
+import com.aluracursos.literalura.repository.LibroRepository;
 import com.aluracursos.literalura.service.ConsumoApi;
 import com.aluracursos.literalura.service.ConvierteDatos;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,7 +17,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
 
+
 public class Principal {
+    private LibroRepository libroRepository;
+    private AutorRepository autorRepository;
     private Scanner teclado = new Scanner(System.in);
     private ConsumoApi consumoApi = new ConsumoApi();
     private final String URL_BASE = "https://gutendex.com/books/";
@@ -22,8 +28,9 @@ public class Principal {
     private ObjectMapper objectMapper = new ObjectMapper();
     private List<Libro> librosBuscados = new ArrayList<>();
 
-    public Principal() {
-
+    public Principal(LibroRepository lRepository, AutorRepository aRepository) {
+        this.libroRepository = lRepository;
+        this.autorRepository = aRepository;
     }
 
     public void muestraElMenu() {
@@ -48,7 +55,7 @@ public class Principal {
 
                     switch (opcion) {
                         case 1:
-                            buscarLibrosApi();
+                            buscarLibro();
                             break;
                         case 2:
                             mostrarLibrosRegistrados();
@@ -70,48 +77,79 @@ public class Principal {
                     }
                 }catch (InputMismatchException e){
                     System.out.println("Opcion invalida! reintente...");
-                    teclado.nextLine(); // limpiamos el buffer de teclado.
+                    teclado.nextLine();
                     opcion = -1;
                 }
             }
 
     }
 
-    private void buscarLibrosApi() {
+    private void buscarLibro(){
         System.out.println("Escribe el nombre del libro que deseas buscar");
         var libroBuscar = teclado.nextLine();
-        String json = null;
-        try {
-            json = consumoApi.obtenerDatos(URL_BASE + "?search=" + URLEncoder.encode(libroBuscar, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        Libro libro = null;
 
-        // Procesamos la respuesta Json y la formateamos como un Record Datoslibro
-        // ademas filtramos solos los que cominecen con el texto indicado
-        Optional <Libro> libroEncontrado = this.procesaJsonLibros(json).stream()
-                .filter(l -> l.titulo().toLowerCase().contains(libroBuscar.toLowerCase()))
-                //.sorted(Comparator.comparing(DatosLibro::descargas).reversed())
-                .map(l-> new Libro(l))
-                .findFirst();
+        Optional<Libro> libroEncontrado = libroRepository.findByTituloContainsIgnoreCase(libroBuscar);
 
         if(libroEncontrado.isPresent()){
-            var libro = libroEncontrado.get();
-            librosBuscados.add(libro);
+            System.out.println("Libro ya registrado en BD");
+            libro = libroEncontrado.get();
+        }else{
+            System.out.println("Buscando en API...");
+            libroEncontrado = buscarLibrosApi(libroBuscar);
+            if(libroEncontrado.isPresent()){
+                libro = libroEncontrado.get();
+                libroRepository.save(libro);
+            }else{
+                System.out.println("No hay resultados para la busqueda: " + libroBuscar);
+            }
+        }
+        if(libro != null){
             System.out.println(libro);
         }
 
     }
 
+    private Optional<Libro> buscarLibrosApi(String titulo) {
+        String json = null;
+
+        try {
+            json = consumoApi.obtenerDatos(URL_BASE + "?search=" + URLEncoder.encode(titulo, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Procesamos la respuesta Json y la formateamos como un Record Datoslibro
+        // ademas filtramos solos los que comiencen con el texto indicado
+        Optional <Libro> libroEncontrado = this.procesaJsonLibros(json).stream()
+                .filter(l -> l.titulo().toLowerCase().contains(titulo.toLowerCase()))
+                .map(l-> new Libro(l))
+                .findFirst();
+
+        return libroEncontrado;
+
+    }
+
     private void mostrarLibrosRegistrados() {
-        System.out.println(" ======= Hay " + librosBuscados.size() + " libros registrados =======");
-        librosBuscados.forEach(System.out::println);
+        librosBuscados = libroRepository.findAll();
+
+        if(!librosBuscados.isEmpty()){
+            System.out.println(" ======= Hay " + librosBuscados.size() + " libros registrados =======");
+            librosBuscados.stream()
+                    .sorted(Comparator.comparing(Libro::getTitulo))
+                    .forEach(l-> System.out.println(l.toString()));
+        }else{
+            System.out.println("Aun no nada por aca!!! realice una busqueda primero..");
+        }
+
     }
 
     private void mostrarAutoresRegistrados() {
-        if(!librosBuscados.isEmpty()){
+        var autores = autorRepository.findAll();
+
+        if(!autores.isEmpty()){
             System.out.println(" ======= Autores registrados =======");
-            librosBuscados.forEach(l -> System.out.println(l.getAutor()));
+            autores.forEach(l -> System.out.println(l.showAutor()));
         }else{
             System.out.println("Aun no nada por aca!!! realice una busqueda primero..");
         }
@@ -119,55 +157,37 @@ public class Principal {
     }
 
     private void autoresVivosPorAnio() {
-
-        if(!librosBuscados.isEmpty()){
             System.out.println("Ingrese el año desde el cual desea consultar autores vivos:");
             var anio = teclado.nextLine();
             try{
                 var anioConsulta = Integer.valueOf(anio);
-                System.out.println(" ======= Autores vivos desde el año " + anioConsulta + " =======");
-                librosBuscados.stream()
-                        .filter(l-> l.getAutor().getNacimiento() >= anioConsulta)
-                        .forEach(System.out::println);
+                List<Autor> autores = autorRepository.autoresPorAnio(anioConsulta);
+
+                if(autores.isEmpty()){
+                    System.out.println("No hay autores registrados desde el año " + anioConsulta);
+                }else{
+                    System.out.println(" ======= Autores vivos desde el año " + anioConsulta + " =======");
+                    autores.stream()
+                            .forEach(System.out::println);
+                }
             }catch (NumberFormatException e){
                 System.out.println("El formato del año no es correcto! reintente...");
             }
-        }else{
-            System.out.println("Aun no nada por aca!!! realice una busqueda primero..");
-        }
     }
 
     private void mostrarLibrosPorIdioma() {
-        if(!librosBuscados.isEmpty()){
-            System.out.println("Ingrese el idiaoma de los libros que desea buscar (es: español, en: ingles, fr: frances)");
+
+            System.out.println("Ingrese el idioma de los libros que desea buscar (es: español, en: ingles, fr: frances)");
             var idiomaBuscado = teclado.nextLine();
+            List<Libro> libros = libroRepository.findByIdioma(idiomaBuscado);
 
-                System.out.println(" ======= Libros en idioma " + idiomaBuscado + " =======");
-                librosBuscados.stream()
-                        .filter(a -> a.getIdioma().equalsIgnoreCase(idiomaBuscado))
+            if(!libros.isEmpty()){
+                System.out.println(" ======= " + libros.size() +" Libros en idioma '" + idiomaBuscado + "' =======");
+                libros.stream()
                         .forEach(System.out::println);
-
-        }else{
-            System.out.println("Aun no nada por aca!!! realice una busqueda primero..");
-        }
-    }
-
-
-    // metodo para probar la conversion de datos
-    public void testApi() {
-        String busqueda = "pride";
-        List<Libro> librosEncontrados;
-
-        var json = consumoApi.obtenerDatos(URL_BASE + "?search=" + busqueda);
-
-        // Procesamos la respuesta Json y la formateamos como un Record Datoslibro
-        // ademas filtramos solos los que cominecen con el texto indicado
-        librosEncontrados = this.procesaJsonLibros(json).stream().
-                filter(l -> l.titulo().toLowerCase().startsWith(busqueda.toLowerCase()))
-                .map(l-> new Libro(l))
-                .toList();
-
-        librosEncontrados.forEach(System.out::println);
+            }else{
+                System.out.println("No hay libros registrados en el idioma '" + idiomaBuscado + "'");
+            }
 
     }
 
@@ -190,8 +210,8 @@ public class Principal {
                         DatosLibro libro = new DatosLibro(
                                 libroNode.get("id").asInt(),
                                 libroNode.get("title").asText(),
-                                conversor.obtenerDatos(autoresNode.get(0).toString(), DatosAutor.class),
-                                libroNode.get("summaries").get(0).asText(),
+                                (autoresNode.isEmpty() ? null : conversor.obtenerDatos(autoresNode.get(0).toString(), DatosAutor.class)),
+                                (libroNode.get("summaries").isEmpty() ? "Sin informacion!" : libroNode.get("summaries").get(0).asText()),
                                 libroNode.get("languages").get(0).asText(),
                                 libroNode.get("media_type").asText(),
                                 libroNode.get("download_count").asInt()

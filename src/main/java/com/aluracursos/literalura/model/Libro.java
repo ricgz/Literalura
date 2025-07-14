@@ -8,13 +8,18 @@ public class Libro {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Integer id_api;
+    @Column (unique = true)
     private String titulo;
-    @ManyToOne
+    @ManyToOne (cascade = CascadeType.PERSIST)
     private Autor autor;
+    @Column(length = 2000)
     private String sinopsis;
     private String idioma;
     private String tipo;
     private Integer descargas;
+
+    public Libro() {
+    }
 
     public Libro(DatosLibro l) {
         this.id_api = l.id();
@@ -77,12 +82,11 @@ public class Libro {
     @Override
     public String toString() {
         return
-                "\n==========================================" +
-                "\nLibro: " + titulo + '\n' +
-                "\tSinopsis: " + sinopsis  + '\n' +
-                "\tidioma: " + idioma + '\n' +
-                "\tAutor: " + autor.toString()  +
-                "\tTipo: " + tipo + '\n' +
-                "\tDescargas: " + descargas + '\n';
+                "\n----- LIBRO ------" + '\n' +
+                "Titulo: " + titulo + '\n' +
+                "Autor: " + autor.toString() + '\n' +
+                "idioma: " + idioma + '\n' +
+                "Numero de descargas: " + descargas + '\n' +
+                "---------------------" + '\n' ;
     }
 }

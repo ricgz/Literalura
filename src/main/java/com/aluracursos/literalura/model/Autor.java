@@ -1,7 +1,6 @@
 package com.aluracursos.literalura.model;
 
 import jakarta.persistence.*;
-
 import java.util.List;
 
 @Entity
@@ -14,7 +13,10 @@ public class Autor {
     private Integer nacimiento;
     private Integer fallecimiento;
     @OneToMany(mappedBy = "autor", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<Libro> libro;
+    private List<Libro> libros;
+
+    public Autor() {
+    }
 
     public Autor(DatosAutor autor) {
         this.nombre = autor.nombre();
@@ -46,11 +48,33 @@ public class Autor {
         this.fallecimiento = fallecimiento;
     }
 
+    public List<Libro> getLibros() {
+        return libros;
+    }
+
+    public void setLibros(List<Libro> libros) {
+        this.libros = libros;
+    }
+
     @Override
     public String toString() {
         return getNombre() +
                 " (Nacimiento: " + getNacimiento() +
                 " - Fallecimiento: " +  getFallecimiento() +
-                ")\n";
+                ")";
+    }
+
+    private List<String> getTituloLibros(){
+        return getLibros().stream()
+                .map(l -> l.getTitulo())
+                .toList();
+    }
+
+    public String showAutor() {
+
+        return "Autor: " + getNombre() + "\n" +
+                "Fecha de nacimiento: " + getNacimiento() + "\n" +
+                "Fecha de fallecimiento: " +  getFallecimiento() + "\n" +
+                "Libros: " + getTituloLibros() + "\n";
     }
 }
