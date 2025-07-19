@@ -40,11 +40,12 @@ public class Principal {
             while (opcion != 0) {
                 var menu = """
                         \n
-                    1 - Buscar libro por titulo (buscar en API y registrar en BD)
-                    2 - Listar libros registrados (buscar en BD)
-                    3 - Listar autores registrados (buscar en BD)
-                    4 - Listar autores vivos en un determinado año (buscar en BD)
+                    1 - Buscar libro por titulo (Buscar en API y registrar en BD)
+                    2 - Listar libros registrados (Buscar en BD)
+                    3 - Listar autores registrados (Buscar en BD)
+                    4 - Listar autores vivos en un determinado año (Buscar en BD)
                     5 - Listar libros por idioma (Buscar en BD)
+                    6 - Revisar libro (Almacenado en BD)
                                   
                     0 - Salir
                     """;
@@ -68,6 +69,9 @@ public class Principal {
                             break;
                         case 5:
                             mostrarLibrosPorIdioma();
+                            break;
+                        case 6:
+                            revisarLibro();
                             break;
                         case 0:
                             System.out.println("Cerrando la aplicación...");
@@ -188,6 +192,50 @@ public class Principal {
             }else{
                 System.out.println("No hay libros registrados en el idioma '" + idiomaBuscado + "'");
             }
+
+    }
+
+    private void revisarLibro(){
+        librosBuscados = libroRepository.findAll();
+
+        if(!librosBuscados.isEmpty()){
+            var opcion = -1;
+            var cantidadLibros = librosBuscados.size();
+
+            while(opcion != 0) {
+                System.out.println(" ======= Libros disponibles =======");
+
+                for (int i = 0; i < cantidadLibros; i++) {
+                    System.out.println(i + 1 + ") " + librosBuscados.get(i).getTitulo());
+                }
+                System.out.println("0) Volver");
+                System.out.println("Indique el numero del libro que desea revisar: ");
+                var seleccion = teclado.nextLine();
+                try{
+                    opcion = Integer.valueOf(seleccion);
+
+                    if((opcion > 0) && (opcion <= cantidadLibros)){
+                        var libro = librosBuscados.get(opcion-1);
+                        System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -- - ");
+                        System.out.println("Titulo: " + libro.getTitulo() + "\n");
+                        System.out.println("Autor: " + libro.getAutor() + "\n");
+                        System.out.println("Resumen:\n" +  libro.getSinopsis() + "\n\n");
+                    } else if (opcion == 0) {
+                        break;
+                    }else {
+                        System.out.println("Opcion invalida!, reintente.\n");
+                        opcion = -1;
+                    }
+
+                }catch (NumberFormatException e){
+                    opcion = -1;
+                    System.out.println("La opcion ingresada no cumple el formato indicado, reintente.\n");
+                }
+            }
+
+        }else{
+            System.out.println("Aun no nada por aca!!! realice una busqueda primero..");
+        }
 
     }
 
